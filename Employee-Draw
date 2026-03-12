@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 سحب الموظفين</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #f5c842;
+  --gold2: #c8920a;
+  --gold-glow: rgba(245,200,66,0.35);
+  --bg: #F2F0EF;
+  --bg2: #F2F0EF;
+  --purple: #5b21b6;
+  --purple2: #7c3aed;
+  --green: #10b981;
+  --red: #ef4444;
+  --border: rgba(0,0,0,0.09);
+  --glass: rgba(255,255,255,0.7);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--bg);
+  font-family:'Cairo',sans-serif;
+  color:#1a1a2e;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── BG ── */
+canvas#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
+canvas#confetti-canvas{position:fixed;inset:0;z-index:300;pointer-events:none;}
+.orb{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;}
+.o1{width:600px;height:600px;background:rgba(91,33,182,0.07);top:-200px;right:-200px;}
+.o2{width:500px;height:500px;background:rgba(245,200,66,0.1);bottom:-150px;left:-150px;}
+
+/* ── PAGES ── */
+.page{
+  position:fixed;inset:0;z-index:1;
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+  transition:transform .6s cubic-bezier(.77,0,.18,1), opacity .6s ease;
+}
+#page1{transform:translateX(0);opacity:1;}
+#page2{transform:translateX(-100%);opacity:0;}
+#page2.active{transform:translateX(0);opacity:1;}
+#page1.hidden{transform:translateX(100%);opacity:0;}
+
+/* ── PAGE 1 ── */
+.p1-wrap{
+  max-width:860px;margin:0 auto;
+  padding:40px 20px 100px;
+  width:100%;position:relative;z-index:2;
+}
+.header{text-align:center;margin-bottom:36px;}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);
+  border-radius:50px;padding:5px 16px;font-size:12px;color:var(--gold);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.header h1{
+  font-size:clamp(34px,6vw,58px);font-weight:900;
+  background:linear-gradient(135deg,#1a1a2e 0%,var(--purple2) 50%,var(--gold2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+}
+.header p{color:rgba(0,0,0,.4);font-size:14px;}
+
+.card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:20px;padding:22px;backdrop-filter:blur(16px);margin-bottom:14px;
+}
+.card-title{
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(0,0,0,.35);margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+.card-title i{width:20px;height:1px;background:var(--border);display:inline-block;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:580px){.g2{grid-template-columns:1fr;}}
+
+.inp{
+  width:100%;background:rgba(255,255,255,0.9);border:1px solid rgba(0,0,0,0.1);
+  border-radius:12px;padding:12px 15px;color:#1a1a2e;
+  font-family:'Cairo',sans-serif;font-size:14px;outline:none;
+  transition:all .2s;text-align:right;
+}
+.inp::placeholder{color:rgba(0,0,0,.25);}
+.inp:focus{border-color:var(--purple2);background:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.1);}
+textarea.inp{resize:vertical;min-height:84px;}
+
+.row{display:flex;gap:10px;align-items:flex-end;}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;border-radius:11px;padding:12px 18px;
+  font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a0f00;}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--gold-glow);}
+.btn-purple{background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);color:#c4b5fd;}
+.btn-purple:hover{background:rgba(124,58,237,.32);transform:translateY(-1px);}
+.btn-ghost{background:rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.1);color:rgba(0,0,0,.55);}
+.btn-ghost:hover{background:rgba(0,0,0,.1);color:#1a1a2e;}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;}
+.btn-danger:hover{background:rgba(239,68,68,.22);}
+.btn-sm{padding:9px 13px;font-size:13px;border-radius:9px;}
+
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+
+.opt-row{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  background:rgba(0,0,0,.04);border-radius:12px;padding:13px 15px;margin-top:10px;
+}
+.opt-label{color:rgba(0,0,0,.45);font-size:14px;}
+.num-inp{
+  background:#fff;border:1px solid rgba(0,0,0,.12);
+  border-radius:8px;padding:7px 12px;color:#1a1a2e;
+  font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;
+  width:64px;text-align:center;outline:none;
+}
+.tog{width:38px;height:21px;background:rgba(0,0,0,.15);border-radius:50px;position:relative;transition:background .2s;border:1px solid rgba(0,0,0,.1);}
+.tog.on{background:var(--green);}
+.tog::after{content:'';position:absolute;top:2px;right:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .2s;}
+.tog.on::after{transform:translateX(-17px);}
+.tog-label{font-size:14px;color:rgba(0,0,0,.6);}
+
+/* names chips */
+.names-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.count-pill{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.2);color:var(--gold);border-radius:50px;padding:3px 13px;font-size:13px;font-weight:700;}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:8px;min-height:46px;}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:#fff;border:1px solid rgba(0,0,0,.1);
+  border-radius:50px;padding:7px 13px;font-size:14px;color:#1a1a2e;
+  animation:ci .3s cubic-bezier(.34,1.56,.64,1);transition:all .2s;
+}
+.chip:hover{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.05);}
+.chip-x{
+  width:17px;height:17px;border-radius:50%;background:rgba(0,0,0,.07);
+  border:none;color:rgba(0,0,0,.35);font-size:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.chip-x:hover{background:rgba(239,68,68,.15);color:#ef4444;}
+@keyframes ci{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.empty-msg{color:rgba(0,0,0,.25);font-size:14px;}
+
+/* GO BUTTON */
+.go-wrap{
+  position:fixed;bottom:0;left:0;right:0;z-index:10;
+  padding:18px 20px;
+  background:linear-gradient(to top,rgba(242,240,239,1) 60%,transparent);
+  display:flex;justify-content:center;
+}
+.btn-go{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#4c1d95,var(--purple2),#818cf8);
+  border:none;border-radius:16px;padding:18px 64px;color:#fff;
+  font-family:'Cairo',sans-serif;font-size:20px;font-weight:900;
+  cursor:pointer;transition:all .3s;letter-spacing:1px;
+  box-shadow:0 0 40px rgba(124,58,237,.35);
+  display:flex;align-items:center;gap:10px;
+}
+.btn-go .shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);transform:translateX(-100%);transition:transform .6s;}
+.btn-go:not(:disabled):hover{transform:translateY(-3px);box-shadow:0 16px 48px rgba(124,58,237,.55);}
+.btn-go:not(:disabled):hover .shine{transform:translateX(100%);}
+.btn-go:disabled{opacity:.3;cursor:not-allowed;}
+.btn-go .arrow{font-size:22px;transition:transform .3s;}
+.btn-go:not(:disabled):hover .arrow{transform:translateX(-6px);}
+
+/* ─────────────────────────────────────── */
+/* ── PAGE 2 ── */
+.p2-wrap{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;z-index:2;padding:40px 20px;text-align:center;
+}
+.p2-back{
+  position:fixed;top:20px;right:20px;z-index:10;
+  background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.1);
+  border-radius:12px;padding:10px 18px;color:rgba(0,0,0,.55);
+  font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;
+}
+.p2-back:hover{background:rgba(0,0,0,.12);color:#1a1a2e;}
+
+.p2-participants{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+  max-width:700px;margin-bottom:48px;
+}
+.p2-chip{
+  background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.1);
+  border-radius:50px;padding:7px 16px;font-size:14px;color:rgba(0,0,0,.6);
+}
+.p2-title{
+  font-size:clamp(28px,5vw,48px);font-weight:900;
+  background:linear-gradient(135deg,#1a1a2e,var(--purple2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:8px;
+}
+.p2-sub{color:rgba(0,0,0,.35);font-size:14px;margin-bottom:56px;}
+
+/* GIANT DRAW BUTTON */
+.btn-draw-giant{
+  position:relative;overflow:hidden;
+  width:min(320px,80vw);height:min(320px,80vw);border-radius:50%;
+  background:conic-gradient(from 0deg,#4c1d95,#7c3aed,#818cf8,#f5c842,#7c3aed,#4c1d95);
+  border:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Cairo',sans-serif;color:#fff;
+  box-shadow:
+    0 0 0 3px rgba(124,58,237,.3),
+    0 0 60px rgba(124,58,237,.4),
+    0 0 120px rgba(124,58,237,.2);
+  transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  animation:spin-border 6s linear infinite;
+}
+@keyframes spin-border{
+  from{filter:hue-rotate(0deg);}
+  to{filter:hue-rotate(360deg);}
+}
+.btn-draw-giant::before{
+  content:'';position:absolute;inset:6px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#2d1b69,#0f0721);
+}
+.btn-draw-giant:hover{
+  transform:scale(1.06);
+  box-shadow:0 0 0 4px rgba(245,200,66,.4),0 0 80px rgba(124,58,237,.7),0 0 160px rgba(124,58,237,.3);
+}
+.btn-draw-giant:active{transform:scale(.97);}
+.draw-icon{font-size:60px;position:relative;z-index:1;margin-bottom:8px;animation:pulse-icon 2s ease-in-out infinite;}
+@keyframes pulse-icon{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.draw-text{font-size:22px;font-weight:900;position:relative;z-index:1;letter-spacing:1px;}
+.draw-hint{font-size:13px;color:rgba(255,255,255,.5);position:relative;z-index:1;margin-top:4px;}
+
+.count-display{
+  margin-top:36px;display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.8);border:1px solid rgba(0,0,0,.1);
+  border-radius:14px;padding:14px 24px;
+}
+.count-display .cd-num{
+  font-size:32px;font-weight:900;color:var(--purple2);line-height:1;
+}
+.count-display .cd-label{color:rgba(0,0,0,.4);font-size:14px;text-align:right;}
+
+/* ── OVERLAY ── */
+#overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(242,240,239,.97);backdrop-filter:blur(28px);
+  align-items:center;justify-content:center;flex-direction:column;
+}
+#overlay.active{display:flex;}
+.stage-lbl{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(0,0,0,.35);margin-bottom:28px;}
+
+/* slot */
+.slot{
+  width:min(420px,90vw);height:90px;overflow:hidden;border-radius:16px;
+  border:1.5px solid rgba(245,200,66,.6);background:rgba(255,255,255,.8);
+  box-shadow:0 0 40px rgba(245,200,66,.2),inset 0 0 20px rgba(0,0,0,.04);
+  position:relative;
+}
+.slot-ft,.slot-fb{position:absolute;left:0;right:0;height:32px;pointer-events:none;z-index:2;}
+.slot-ft{top:0;background:linear-gradient(to bottom,rgba(242,240,239,.98),transparent);}
+.slot-fb{bottom:0;background:linear-gradient(to top,rgba(242,240,239,.98),transparent);}
+.slot-ln{
+  position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+  height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  box-shadow:0 0 14px var(--gold);z-index:3;pointer-events:none;
+}
+.slot-track{position:absolute;width:100%;will-change:transform;}
+.slot-item{height:90px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:rgba(0,0,0,.3);}
+.slot-item.hi{color:var(--purple2);font-size:30px;text-shadow:0 0 24px rgba(124,58,237,.3);}
+
+.multi-slots{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:720px;}
+.mini-slot{width:160px;height:74px;overflow:hidden;position:relative;border-radius:12px;border:1px solid rgba(245,200,66,.5);background:rgba(255,255,255,.8);}
+.mini-track{position:absolute;width:100%;will-change:transform;}
+.mini-item{height:74px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:rgba(0,0,0,.3);}
+.mini-item.hi{color:var(--purple2);}
+
+/* winner */
+.winner-reveal{display:none;text-align:center;animation:pop .6s cubic-bezier(.34,1.56,.64,1);}
+.winner-reveal.show{display:block;}
+@keyframes pop{from{opacity:0;transform:scale(.4) rotate(-8deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+.trophy{font-size:80px;display:block;margin-bottom:10px;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.wname{
+  font-size:clamp(32px,7vw,60px);font-weight:900;
+  background:linear-gradient(135deg,var(--purple2),#1a1a2e);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1.2;margin:10px 0 6px;
+}
+.wsub{color:rgba(0,0,0,.35);font-size:14px;margin-bottom:28px;}
+.ov-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn-again{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;border-radius:12px;padding:13px 26px;color:#fff;font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-again:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.35);}
+.btn-close{background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.1);border-radius:12px;padding:13px 26px;color:rgba(0,0,0,.55);font-family:'Cairo',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-close:hover{background:rgba(0,0,0,.12);color:#1a1a2e;}
+
+input[type=file]{display:none;}
+</style>
+</head>
+<body>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<canvas id="bg-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ═══════════ PAGE 1 ═══════════ -->
+<div class="page" id="page1">
+  <div class="p1-wrap">
+
+    <div class="header">
+      <div class="eyebrow"><span class="dot"></span> فعاليات وسحوبات</div>
+      <h1><span style="-webkit-text-fill-color:initial">🎲</span> سحب الموظفين</h1>
+      <p>أضف الأسماء وضبط الإعدادات ثم انتقل لصفحة السحب</p>
+    </div>
+
+    <!-- Add names -->
+    <div class="g2">
+      <div class="card">
+        <div class="card-title"><i></i> إضافة فردية</div>
+        <div class="row">
+          <input class="inp" id="nameInput" placeholder="اسم الموظف..." style="flex:1"/>
+          <button class="btn btn-gold" onclick="addName()">➕</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i></i> إضافة جماعية</div>
+        <div class="row" style="align-items:flex-start">
+          <textarea class="inp" id="bulk" placeholder="اسم في كل سطر&#10;أحمد&#10;سارة&#10;خالد" style="flex:1"></textarea>
+          <button class="btn btn-purple" style="align-self:flex-end" onclick="addBulk()">📋</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-title"><i></i> إعدادات السحب</div>
+      <div class="opt-row">
+        <div class="opt-label">عدد الفائزين:</div>
+        <input class="num-inp" type="number" id="winnerCount" value="1" min="1"/>
+        <div class="tog-wrap" onclick="toggleNoRepeat()">
+          <div class="tog on" id="togEl"></div>
+          <div class="tog-label">بدون تكرار</div>
+        </div>
+      </div>
+      <div class="tools">
+        <button class="btn btn-ghost btn-sm" onclick="shuffleNames()">🔀 خلط</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportNames()">⬇ تصدير</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('fi').click()">⬆ استيراد</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAll()">🗑 مسح الكل</button>
+        <input type="file" id="fi" onchange="importNames(event)"/>
+      </div>
+    </div>
+
+    <!-- Names -->
+    <div class="card">
+      <div class="names-hdr">
+        <div class="card-title" style="margin:0"><i></i> المشاركون</div>
+        <div class="count-pill" id="countPill">0 موظف</div>
+      </div>
+      <div class="chips-wrap" id="chipsWrap">
+        <span class="empty-msg">👤 لا يوجد موظفون بعد...</span>
+      </div>
+    </div>
+
+  </div><!-- /p1-wrap -->
+
+  <!-- Fixed Go Button -->
+  <div class="go-wrap">
+    <button class="btn-go" id="goBtn" onclick="goToPage2()" disabled>
+      <div class="shine"></div>
+      الانتقال لصفحة السحب
+      <span class="arrow">←</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ PAGE 2 ═══════════ -->
+<div class="page" id="page2">
+  <button class="p2-back" onclick="goToPage1()">→ تعديل الأسماء</button>
+
+  <div class="p2-wrap">
+    <div class="p2-title">جاهز للسحب 🎯</div>
+    <div class="p2-sub" id="p2sub">اضغط الزر لبدء السحب العشوائي</div>
+
+    <div class="p2-participants" id="p2chips"></div>
+
+    <button class="btn-draw-giant" id="giantBtn" onclick="startDraw()">
+      <span class="draw-icon">🎰</span>
+      <span class="draw-text">ابدأ السحب</span>
+      <span class="draw-hint">اضغط هنا</span>
+    </button>
+
+    <div class="count-display">
+      <div>
+        <div class="cd-num" id="cdNum">0</div>
+      </div>
+      <div class="cd-label">عدد<br>المشاركين</div>
+      <div style="width:1px;height:36px;background:var(--border);margin:0 4px;"></div>
+      <div>
+        <div class="cd-num" id="cdWin" style="color:#a78bfa;">1</div>
+      </div>
+      <div class="cd-label">عدد<br>الفائزين</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ OVERLAY ═══════════ -->
+<div id="overlay">
+  <div class="stage-lbl" id="stageLbl">🎰 جاري السحب العشوائي...</div>
+  <div id="singleSlot">
+    <div class="slot">
+      <div class="slot-ft"></div>
+      <div class="slot-fb"></div>
+      <div class="slot-ln"></div>
+      <div class="slot-track" id="slotTrack"></div>
+    </div>
+  </div>
+  <div class="multi-slots" id="multiSlots" style="display:none;"></div>
+  <div class="winner-reveal" id="winReveal">
+    <span class="trophy">🏆</span>
+    <div id="winNames"></div>
+    <div class="wsub">🎉 مبروك للفائز!</div>
+    <div class="ov-actions">
+      <button class="btn-again" onclick="startDraw()">🔁 سحب مرة أخرى</button>
+      <button class="btn-close" onclick="closeOverlay()">✖ إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── 🔊 Sound Engine (Web Audio API) ── */
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+
+function resumeAC(){ if(AC.state==='suspended') AC.resume(); }
+
+function playTone(freq, type='sine', vol=0.18, dur=0.12, fadeStart=0.04){
+  resumeAC();
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.connect(g); g.connect(AC.destination);
+  o.type=type; o.frequency.setValueAtTime(freq, AC.currentTime);
+  g.gain.setValueAtTime(vol, AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
+  o.start(); o.stop(AC.currentTime+dur);
+}
+
+function playNoise(dur=0.08, vol=0.06){
+  resumeAC();
+  const buf=AC.createBuffer(1,AC.sampleRate*dur,AC.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+  const src=AC.createBufferSource(), g=AC.createGain();
+  src.buffer=buf; src.connect(g); g.connect(AC.destination);
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+  src.start(); src.stop(AC.currentTime+dur);
+}
+
+// صوت إضافة اسم — pop خفيف
+function sndAdd(){ playTone(880,'sine',0.12,0.1); }
+
+// صوت حذف — نبضة نازلة
+function sndRemove(){ playTone(300,'sine',0.1,0.1); }
+
+// صوت الانتقال للصفحة التانية
+function sndGo(){
+  [440,550,660].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',0.13,0.15),i*80));
+}
+
+// صوت الدوران — تيك تاك متسارع ثم يبطأ
+let tickInterval=null;
+function startTickSound(duration){
+  resumeAC();
+  let elapsed=0, interval=60;
+  function tick(){
+    playNoise(0.04,0.08);
+    const progress=elapsed/duration;
+    // يبدأ سريع ثم يبطأ مع نهاية الدوران
+    interval = 40 + progress * 220;
+    elapsed+=interval;
+    if(elapsed<duration-300) tickInterval=setTimeout(tick, interval);
+  }
+  tick();
+}
+function stopTickSound(){ clearTimeout(tickInterval); }
+
+// صوت الفوز 🎺 — fanfare
+function sndWin(){
+  resumeAC();
+  const notes=[523,659,784,1047];
+  notes.forEach((f,i)=>{
+    setTimeout(()=>{
+      playTone(f,'triangle',0.18,0.25);
+      if(i===notes.length-1){
+        setTimeout(()=>{
+          playTone(1047,'sine',0.15,0.5);
+          playTone(784,'sine',0.1,0.5);
+        },100);
+      }
+    },i*120);
+  });
+}
+
+// صوت إغلاق
+function sndClose(){ playTone(330,'sine',0.1,0.12); }
+
+/* ── BG Particles ── */
+const bgC=document.getElementById('bg-canvas'),bgX=bgC.getContext('2d');
+let pts=[];
+function rBg(){bgC.width=innerWidth;bgC.height=innerHeight;pts=Array.from({length:130},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.3+.2,o:Math.random()*.5+.08,s:Math.random()*.4+.05}));}
+rBg();addEventListener('resize',rBg);
+(function ab(){bgX.clearRect(0,0,bgC.width,bgC.height);const t=Date.now()/1000;pts.forEach(p=>{const o=p.o*(0.5+0.5*Math.sin(t*p.s*4+p.x*.01));bgX.beginPath();bgX.arc(p.x,p.y,p.r,0,Math.PI*2);bgX.fillStyle=`rgba(100,80,180,${o})`;bgX.fill();});requestAnimationFrame(ab);})();
+
+/* ── Confetti ── */
+const cfC=document.getElementById('confetti-canvas'),cfX=cfC.getContext('2d');
+cfC.width=innerWidth;cfC.height=innerHeight;
+addEventListener('resize',()=>{cfC.width=innerWidth;cfC.height=innerHeight;});
+let cfs=[];
+const cfCol=['#f5c842','#7c3aed','#60a5fa','#34d399','#fb923c','#f472b6','#fff','#a78bfa'];
+function spawnConf(n=200){for(let i=0;i<n;i++)cfs.push({x:Math.random()*cfC.width,y:-30-Math.random()*300,vx:(Math.random()-.5)*7,vy:Math.random()*4+2,r:Math.random()*8+3,color:cfCol[~~(Math.random()*cfCol.length)],shape:Math.random()>.5?'r':'c',rot:Math.random()*360,rv:(Math.random()-.5)*10,life:1});animCf();}
+function animCf(){cfX.clearRect(0,0,cfC.width,cfC.height);cfs=cfs.filter(c=>c.life>0&&c.y<cfC.height+60);if(!cfs.length)return;cfs.forEach(c=>{c.x+=c.vx;c.y+=c.vy;c.vy+=.13;c.rot+=c.rv;c.life-=.007;cfX.save();cfX.globalAlpha=Math.min(1,c.life*3);cfX.translate(c.x,c.y);cfX.rotate(c.rot*Math.PI/180);cfX.fillStyle=c.color;if(c.shape==='r')cfX.fillRect(-c.r/2,-c.r/4,c.r,c.r/2);else{cfX.beginPath();cfX.arc(0,0,c.r/2,0,Math.PI*2);cfX.fill();}cfX.restore();});requestAnimationFrame(animCf);}
+
+/* ── State ── */
+let names=JSON.parse(localStorage.getItem('edn')||'[]');
+let noRepeat=true;
+
+function save(){localStorage.setItem('edn',JSON.stringify(names));}
+
+function render(){
+  const w=document.getElementById('chipsWrap');
+  const p=document.getElementById('countPill');
+  const g=document.getElementById('goBtn');
+  p.textContent=`${names.length} موظف`;
+  g.disabled=names.length<1;
+  w.innerHTML=names.length?names.map((n,i)=>`<div class="chip"><span>${n}</span><button class="chip-x" onclick="removeName(${i})">✕</button></div>`).join(''):'<span class="empty-msg">👤 لا يوجد موظفون بعد...</span>';
+  // update page 2
+  document.getElementById('cdNum').textContent=names.length;
+  document.getElementById('p2chips').innerHTML=names.map(n=>`<div class="p2-chip">${n}</div>`).join('');
+}
+
+function addName(){const i=document.getElementById('nameInput');if(!i.value.trim())return;names.push(i.value.trim());i.value='';save();render();i.focus();sndAdd();}
+function addBulk(){const lines=document.getElementById('bulk').value.split('\n').filter(l=>l.trim());lines.forEach(l=>names.push(l.trim()));document.getElementById('bulk').value='';save();render();if(lines.length)sndAdd();}
+function removeName(i){names.splice(i,1);save();render();sndRemove();}
+function shuffleNames(){for(let i=names.length-1;i>0;i--){const j=~~(Math.random()*(i+1));[names[i],names[j]]=[names[j],names[i]];}save();render();[200,320,260,400].forEach((f,i)=>setTimeout(()=>playTone(f,'square',0.06,0.08),i*50));}
+function clearAll(){if(!names.length)return;if(confirm('مسح جميع الأسماء؟')){names=[];save();render();}}
+function toggleNoRepeat(){noRepeat=!noRepeat;document.getElementById('togEl').classList.toggle('on',noRepeat);}
+function exportNames(){const b=new Blob([names.join('\n')]);const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='employees.txt';a.click();}
+function importNames(e){const r=new FileReader();r.onload=ev=>{ev.target.result.split('\n').forEach(l=>{if(l.trim())names.push(l.trim());});save();render();};r.readAsText(e.target.files[0]);}
+document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')addName();});
+
+/* ── Page transitions ── */
+function goToPage2(){
+  const cnt=parseInt(document.getElementById('winnerCount').value)||1;
+  document.getElementById('cdWin').textContent=cnt;
+  document.getElementById('page1').classList.add('hidden');
+  document.getElementById('page2').classList.add('active');
+  sndGo();
+}
+function goToPage1(){
+  document.getElementById('page2').classList.remove('active');
+  document.getElementById('page1').classList.remove('hidden');
+  sndClose();
+}
+
+/* ── Draw ── */
+function startDraw(){
+  if(!names.length)return;
+  const ov=document.getElementById('overlay');
+  document.getElementById('winReveal').classList.remove('show');
+  ov.classList.add('active');
+  document.getElementById('stageLbl').style.display='block';
+  const count=Math.min(parseInt(document.getElementById('winnerCount').value)||1,names.length);
+  const dur=count===1?3200:2800;
+  startTickSound(dur);
+  if(count===1)runSingle();else runMulti(count);
+}
+
+function pickWinners(n){
+  let pool=[...names],w=[];
+  for(let i=0;i<n;i++){if(!pool.length)break;const x=~~(Math.random()*pool.length);w.push(pool[x]);if(noRepeat)pool.splice(x,1);}
+  return w;
+}
+
+function runSingle(){
+  document.getElementById('singleSlot').style.display='block';
+  document.getElementById('multiSlots').style.display='none';
+  const[w]=pickWinners(1);
+  buildSlot(document.getElementById('slotTrack'),90,w,3200,()=>showWinner([w]));
+}
+function runMulti(n){
+  document.getElementById('singleSlot').style.display='none';
+  const ms=document.getElementById('multiSlots');ms.style.display='flex';ms.innerHTML='';
+  const ws=pickWinners(n);
+  ws.forEach((w,i)=>{
+    const d=document.createElement('div');d.className='mini-slot';
+    const t=document.createElement('div');t.className='mini-track';
+    d.appendChild(t);ms.appendChild(d);
+    setTimeout(()=>buildSlot(t,74,w,2400+i*300,()=>{if(i===ws.length-1)showWinner(ws);}),i*180);
+  });
+}
+
+function buildSlot(track,ih,winner,dur,onDone){
+  const isMain=ih===90;
+  const itemCls=isMain?'slot-item':'mini-item';
+  const items=[];
+  for(let i=0;i<55;i++)items.push(names[~~(Math.random()*names.length)]);
+  items.push(winner);
+  track.innerHTML=items.map(n=>`<div class="${itemCls}" style="height:${ih}px">${n}</div>`).join('');
+  const targetY=-(items.length-1)*ih;
+  let start=null;
+  function ease(t){return 1-Math.pow(1-t,3.5);}
+  function frame(ts){
+    if(!start)start=ts;
+    const p=Math.min((ts-start)/dur,1);
+    const y=ease(p)*targetY;
+    track.style.transform=`translateY(${y}px)`;
+    const ci=Math.round(-y/ih);
+    track.querySelectorAll(`.${itemCls}`).forEach((el,i)=>el.classList.toggle('hi',i===ci));
+    if(p<1)requestAnimationFrame(frame);
+    else{track.querySelectorAll(`.${itemCls}`).forEach(el=>el.classList.remove('hi'));track.lastElementChild.classList.add('hi');setTimeout(onDone,250);}
+  }
+  requestAnimationFrame(frame);
+}
+
+function showWinner(ws){
+  stopTickSound();
+  document.getElementById('stageLbl').style.display='none';
+  document.getElementById('singleSlot').style.display='none';
+  document.getElementById('multiSlots').style.display='none';
+  document.getElementById('winNames').innerHTML=ws.map(w=>`<div class="wname">${w}</div>`).join('');
+  document.getElementById('winReveal').classList.add('show');
+  spawnConf();
+  sndWin();
+  // استبعاد الفائزين من القائمة تلقائياً
+  ws.forEach(w=>{const idx=names.indexOf(w);if(idx!==-1)names.splice(idx,1);});
+  save();render();
+  document.getElementById('giantBtn').disabled=names.length<1;
+}
+function closeOverlay(){
+  sndClose();
+  document.getElementById('overlay').classList.remove('active');
+  cfs=[];cfX.clearRect(0,0,cfC.width,cfC.height);
+}
+
+render();
+</script>
+</body>
+</html>
